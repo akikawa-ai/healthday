@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>ヘルスケア日次レポート</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+:root {
+  --bg:     #f9f5ef;
+  --bg2:    #f1ebe0;
+  --bg3:    #e8e0d0;
+  --ink:    #1e1a14;
+  --ink2:   #3a3428;
+  --dim:    #9a8f7e;
+  --rule:   #d4cab8;
+  --red:    #c0321a;
+  --teal:   #1a6b5c;
+  --blue:   #1a3d72;
+  --amber:  #9e5a00;
+  --green:  #2a7838;
+  --serif:  'Shippori Mincho', serif;
+  --mono:   'JetBrains Mono', monospace;
+}
+
+*,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--serif);
+  min-height: 100vh;
+  position: relative;
+}
+
+/* Subtle horizontal rules as background texture */
+body::before {
+  content: '';
+  position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background-image: repeating-linear-gradient(
+    transparent, transparent 31px,
+    rgba(30,26,20,.035) 31px, rgba(30,26,20,.035) 32px
+  );
+}
+
+.wrap { position: relative; z-index: 1; max-width: 840px; margin: 0 auto; padding: 0 24px 80px; }
+
+/* ── MASTHEAD ── */
+.masthead {
+  padding: 32px 0 20px;
+  border-bottom: 1px solid var(--ink);
+  margin-bottom: 28px;
+  display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+}
+.mast-left { }
+.eyebrow {
+  font-size: 10px; font-family: var(--mono); letter-spacing: 3px;
+  text-transform: uppercase; color: var(--dim); margin-bottom: 8px;
+}
+.mast-title {
+  font-size: 32px; font-weight: 800; letter-spacing: -1px; line-height: 1;
+  color: var(--ink);
+}
+.mast-title .accent { color: var(--red); }
+.mast-sub { font-size: 12px; color: var(--dim); font-family: var(--mono); margin-top: 6px; }
+.mast-right { text-align: right; }
+.mast-date { font-size: 11px; color: var(--dim); font-family: var(--mono); }
+.conn-pill {
+  display: inline-flex; align-items: center; gap: 5px;
+  margin-top: 6px; padding: 5px 12px; border-radius: 2px;
+  font-size: 10px; font-family: var(--mono); font-weight: 700; letter-spacing: .5px;
+  border: 1px solid var(--rule); background: var(--bg2); color: var(--dim);
+  transition: all .3s;
+}
+.conn-pill.connected { background: rgba(26,107,92,.07); border-color: rgba(26,107,92,.35); color: var(--teal); }
+.conn-pill.synced    { background: rgba(42,120,56,.07); border-color: rgba(42,120,56,.35); color: var(--green); }
+.conn-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+.conn-pill.synced .conn-dot { animation: blk 1.4s infinite; }
+@keyframes blk { 0%,100%{opacity:1} 50%{opacity:.15} }
+
+/* ── TABS ── */
+.tab-nav {
+  display: flex; gap: 0;
+  border-bottom: 2px solid var(--ink);
+  margin-bottom: 24px;
+}
+.tab-btn {
+  padding: 10px 20px; font-size: 12px; font-weight: 700;
+  font-family: var(--mono); letter-spacing: .8px; text-transform: uppercase;
+  border: none; background: transparent; cursor: pointer; color: var(--dim);
+  border-bottom: 3px solid transparent; margin-bottom: -2px;
+  transition: all .15s;
+}
+.tab-btn.on { color: var(--ink); border-bottom-color: var(--red); }
+.tab-pane { display: none; }
+.tab-pane.on { display: block; }
+
+/* ── GUIDE CARD ── */
+.guide-card {
+  border: 1px solid var(--rule); border-radius: 2px;
+  background: var(--bg2); margin-bottom: 24px;
+  box-shadow: 3px 3px 0 var(--rule);
+}
+.guide-head {
+  background: var(--ink); color: var(--bg);
+  padding: 12px 20px;
+  font-size: 10px; font-family: var(--mono); font-weight: 700;
+  letter-spacing: 2px; text-transform: uppercase;
+  display: flex; align-items: center; gap: 8px;
+}
+.guide-body { padding: 20px 24px; }
+
+.step { display: flex; gap: 14px; align-items: flex-start; padding: 10px 0; border-bottom: 1px dashed var(--rule); }
+.step:last-child { border-bottom: none; }
+.sn {
+  min-width: 24px; height: 24px; border-radius: 2px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; font-family: var(--mono); flex-shrink: 0; margin-top: 1px;
+}
+.sn-r { background: var(--red); color: white; }
+.sn-t { background: var(--teal); color: white; }
+.sn-b { background: var(--blue); color: white; }
+.step-body { flex: 1; }
+.step-title { font-size: 13px; font-weight: 700; margin-bottom: 3px; line-height: 1.4; }
+.step-desc { font-size: 12px; color: var(--dim); line-height: 1.7; }
+.step-desc em { font-style: normal; font-weight: 700; color: var(--ink); }
+.ctag { display: inline-block; padding: 1px 7px; border-radius: 2px; background: var(--bg3); border: 1px solid var(--rule); font-size: 11px; font-family: var(--mono); color: var(--blue); }
+
+.shortcut-recipe {
+  background: var(--ink); border-radius: 2px;
+  padding: 14px 18px; margin-top: 12px;
+}
+.sr-title { font-size: 10px; font-family: var(--mono); color: rgba(255,255,255,.4); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; }
+.sr-row {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 7px 0; border-bottom: 1px solid rgba(255,255,255,.06); font-size: 12px;
+}
+.sr-row:last-child { border-bottom: none; }
+.sr-num { font-family: var(--mono); color: rgba(255,255,255,.3); font-size: 11px; min-width: 18px; }
+.sr-action { color: rgba(255,255,255,.9); font-family: var(--mono); }
+.sr-detail { color: rgba(255,255,255,.45); font-size: 11px; margin-top: 2px; }
+
+/* ── CONNECT AREA ── */
+.connect-card {
+  border: 1px solid var(--rule); border-radius: 2px;
+  background: white; margin-bottom: 24px;
+  box-shadow: 3px 3px 0 var(--rule); overflow: hidden;
+}
+.connect-head {
+  background: var(--ink); color: var(--bg);
+  padding: 12px 20px;
+  font-size: 10px; font-family: var(--mono); font-weight: 700;
+  letter-spacing: 2px; text-transform: uppercase;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.connect-body { padding: 20px 24px; }
+
+.folder-display {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px; border-radius: 2px;
+  background: var(--bg2); border: 1px solid var(--rule);
+  font-size: 12px; font-family: var(--mono); color: var(--dim);
+  margin-bottom: 14px; transition: all .2s;
+}
+.folder-display.set { color: var(--teal); background: rgba(26,107,92,.05); border-color: rgba(26,107,92,.3); }
+
+.btn-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 10px 20px; border: none; border-radius: 2px;
+  cursor: pointer; font-size: 12px; font-weight: 700;
+  font-family: var(--serif); transition: all .15s; white-space: nowrap;
+}
+.btn:disabled { opacity: .38; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
+.btn-teal  { background: var(--teal); color: white; }
+.btn-teal:hover:not(:disabled) { background: #145849; transform: translateY(-1px); box-shadow: 0 3px 10px rgba(26,107,92,.28); }
+.btn-green { background: var(--green); color: white; }
+.btn-green:hover:not(:disabled) { background: #1f5e2a; transform: translateY(-1px); box-shadow: 0 3px 10px rgba(42,120,56,.28); }
+.btn-ink   { background: var(--ink); color: var(--bg); }
+.btn-ink:hover:not(:disabled) { background: var(--ink2); transform: translateY(-1px); }
+.btn-ghost { background: white; color: var(--ink2); border: 1px solid var(--rule); }
+.btn-ghost:hover:not(:disabled) { background: var(--bg2); }
+.btn-red   { background: var(--red); color: white; }
+.btn-red:hover:not(:disabled)   { background: #9e2614; }
+
+.drop-area { margin-top: 16px; padding-top: 16px; border-top: 1px dashed var(--rule); }
+.drop-label { font-size: 10px; font-family: var(--mono); color: var(--dim); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 8px; }
+.drop-zone {
+  border: 2px dashed var(--rule); border-radius: 2px;
+  padding: 20px; text-align: center; cursor: pointer; transition: all .2s; background: var(--bg);
+}
+.drop-zone:hover, .drop-zone.over { border-color: var(--teal); background: rgba(26,107,92,.03); }
+.drop-zone p { font-size: 13px; color: var(--dim); line-height: 1.7; }
+.drop-zone em { font-style: normal; color: var(--ink); font-weight: 700; }
+#fileIn { display: none; }
+
+.prog { display: none; margin-top: 14px; }
+.prog.on { display: block; }
+.prog-row { display: flex; justify-content: space-between; font-size: 11px; font-family: var(--mono); color: var(--dim); margin-bottom: 6px; }
+.prog-track { height: 3px; background: var(--bg3); border-radius: 1px; overflow: hidden; }
+.prog-fill { height: 100%; background: var(--teal); transition: width .3s; width: 0%; }
+
+/* ── MONTH BAR ── */
+.month-bar {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding: 12px 16px; background: white; border: 1px solid var(--rule);
+  border-radius: 2px; box-shadow: 2px 2px 0 var(--rule); margin-bottom: 20px;
+}
+.mb-label { font-size: 10px; font-family: var(--mono); color: var(--dim); text-transform: uppercase; letter-spacing: 1.5px; white-space: nowrap; }
+.mb-input { background: var(--bg2); border: 1px solid var(--rule); border-radius: 2px; padding: 7px 10px; font-size: 13px; font-family: var(--mono); color: var(--ink); outline: none; }
+.mb-input:focus { border-color: var(--teal); }
+.mb-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+.mb-btn { padding: 6px 12px; background: var(--bg2); border: 1px solid var(--rule); border-radius: 2px; font-size: 11px; font-family: var(--mono); cursor: pointer; color: var(--dim); transition: all .15s; white-space: nowrap; }
+.mb-btn:hover { color: var(--ink); background: var(--bg3); }
+.mb-btn.on { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+
+/* ── DATA ── */
+.data-sec { display: none; }
+.data-sec.on { display: block; }
+.data-heading { font-size: 20px; font-weight: 800; margin-bottom: 14px; letter-spacing: -.5px; }
+.data-heading span { color: var(--red); }
+
+.stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: 2px; overflow: hidden; margin-bottom: 16px; box-shadow: 2px 2px 0 var(--rule); }
+.stat-box { background: white; padding: 14px 12px; text-align: center; }
+.sl { font-size: 9px; font-family: var(--mono); color: var(--dim); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 6px; }
+.sv { font-size: 22px; font-weight: 800; font-family: var(--mono); line-height: 1; }
+.sv.r { color: var(--red); } .sv.t { color: var(--teal); } .sv.b { color: var(--blue); } .sv.a { color: var(--amber); }
+.su { font-size: 9px; color: var(--dim); font-family: var(--mono); margin-top: 3px; }
+
+.tbl-wrap { border: 1px solid var(--rule); border-radius: 2px; box-shadow: 2px 2px 0 var(--rule); overflow: hidden; }
+.tbl-scroll { overflow-x: auto; max-height: 520px; overflow-y: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 12px; }
+thead { position: sticky; top: 0; z-index: 2; }
+th { background: var(--ink); color: var(--bg); padding: 11px 14px; text-align: left; font-size: 10px; font-family: var(--mono); font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; white-space: nowrap; border-right: 1px solid rgba(255,255,255,.07); }
+th:last-child { border-right: none; }
+td { padding: 10px 14px; border-bottom: 1px solid var(--bg2); font-family: var(--mono); font-size: 12px; border-right: 1px solid var(--bg3); }
+td:last-child { border-right: none; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: var(--bg2); }
+tr.wknd td { background: rgba(26,61,114,.025); }
+tr.wknd:hover td { background: var(--bg2); }
+tr.nd { opacity: .3; }
+.dc { color: var(--dim); font-size: 11px; }
+.dw { font-size: 11px; font-weight: 700; }
+.dw.sun { color: var(--red); } .dw.sat { color: var(--blue); } .dw.wkd { color: var(--dim); }
+.vw { color: var(--red); font-weight: 600; }
+.vs { color: var(--blue); font-weight: 600; }
+.vd { color: var(--teal); font-weight: 600; }
+.vh { color: var(--amber); font-weight: 600; }
+.ve { color: var(--bg3); }
+.bpt { display: inline-block; padding: 2px 7px; border-radius: 2px; font-size: 10px; font-weight: 700; letter-spacing: .5px; border: 1px solid currentColor; }
+.bpt-ok   { color: var(--green); background: rgba(42,120,56,.06); }
+.bpt-pre  { color: var(--amber); background: rgba(158,90,0,.06); }
+.bpt-high { color: var(--red);   background: rgba(192,50,26,.06); }
+
+.act-row { display: flex; gap: 10px; flex-wrap: wrap; padding: 14px 16px; border-top: 1px solid var(--bg2); background: var(--bg2); }
+
+/* ── URL receiver (Shortcuts) ── */
+.recv-banner {
+  display: none; background: rgba(26,107,92,.08); border: 1px solid rgba(26,107,92,.3);
+  border-radius: 2px; padding: 12px 16px; margin-bottom: 20px;
+  font-size: 13px; color: var(--teal); display: flex; align-items: center; gap: 10px;
+}
+
+/* ── TOAST ── */
+.toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(14px); background: var(--ink); color: var(--bg); padding: 11px 20px; border-radius: 2px; font-size: 12px; font-family: var(--mono); box-shadow: 0 6px 24px rgba(0,0,0,.2); opacity: 0; pointer-events: none; z-index: 999; transition: all .25s; white-space: nowrap; }
+.toast.on { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: var(--bg2); }
+::-webkit-scrollbar-thumb { background: var(--rule); border-radius: 1px; }
+
+@media(max-width:600px) {
+  .masthead { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .mast-right { text-align: left; }
+  .stats-grid { grid-template-columns: repeat(2,1fr); }
+  .mb-btns { display: none; }
+  .mast-title { font-size: 24px; }
+  .tab-btn { padding: 8px 12px; font-size: 11px; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- MASTHEAD -->
+  <div class="masthead">
+    <div class="mast-left">
+      <div class="eyebrow">Shortcuts × iCloud Drive × HealthKit</div>
+      <div class="mast-title">🫀 ヘルス<span class="accent">日次</span>レポート</div>
+      <div class="mast-sub">体重・血圧・心拍 ／ 日別 CSV 出力</div>
+    </div>
+    <div class="mast-right">
+      <div class="mast-date" id="todayDate"></div>
+      <div class="conn-pill" id="connPill">
+        <div class="conn-dot"></div>
+        <span id="connText">待機中</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- URL DATA RECEIVED BANNER -->
+  <div class="recv-banner" id="recvBanner" style="display:none;">
+    ✅ Shortcuts からデータを受信しました
+  </div>
+
+  <!-- TABS -->
+  <div class="tab-nav">
+    <button class="tab-btn on" onclick="swTab('data',this)">📊 データ</button>
+    <button class="tab-btn" onclick="swTab('setup',this)">📱 Shortcuts設定</button>
+    <button class="tab-btn" onclick="swTab('icloud',this)">☁️ iCloud読込</button>
+  </div>
+
+  <!-- ── TAB: DATA ── -->
+  <div class="tab-pane on" id="tp-data">
+
+    <div class="month-bar">
+      <span class="mb-label">表示月</span>
+      <input type="month" class="mb-input" id="monthPick">
+      <div class="mb-btns">
+        <button class="mb-btn on" onclick="setOff(0,this)">今月</button>
+        <button class="mb-btn" onclick="setOff(-1,this)">先月</button>
+        <button class="mb-btn" onclick="setOff(-2,this)">2ヶ月前</button>
+        <button class="mb-btn" onclick="setOff(-3,this)">3ヶ月前</button>
+      </div>
+    </div>
+
+    <div class="data-sec" id="dataSec">
+      <div class="data-heading" id="dataHeading">—</div>
+      <div class="stats-grid">
+        <div class="stat-box"><div class="sl">記録日数</div><div class="sv r" id="sDays">—</div><div class="su">日</div></div>
+        <div class="stat-box"><div class="sl">体重 平均</div><div class="sv t" id="sW">—</div><div class="su">kg</div></div>
+        <div class="stat-box"><div class="sl">収縮期 平均</div><div class="sv b" id="sBP">—</div><div class="su">mmHg</div></div>
+        <div class="stat-box"><div class="sl">心拍 平均</div><div class="sv a" id="sHR">—</div><div class="su">bpm</div></div>
+      </div>
+      <div class="tbl-wrap">
+        <div class="tbl-scroll">
+          <table>
+            <thead><tr>
+              <th>日付</th><th>曜</th>
+              <th>体重 kg</th><th>収縮期</th><th>拡張期</th><th>心拍</th><th>評価</th>
+            </tr></thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="act-row">
+        <button class="btn btn-ink" onclick="dlCSV()">⬇ CSV ダウンロード</button>
+        <button class="btn btn-ghost" onclick="copyCSV()">📋 コピー</button>
+        <button class="btn btn-red" onclick="clearMonth()" style="padding:10px 14px;font-size:11px;">🗑 この月を消去</button>
+      </div>
+    </div>
+
+    <div id="emptyState" style="text-align:center;padding:60px 20px;color:var(--dim);font-size:13px;display:none;">
+      <div style="font-size:36px;margin-bottom:12px;">🫀</div>
+      <div style="font-weight:700;margin-bottom:6px;color:var(--ink);">データがありません</div>
+      <div>「Shortcuts設定」タブでショートカットを作成するか<br>「iCloud読込」タブでファイルを読み込んでください</div>
+    </div>
+
+  </div>
+
+  <!-- ── TAB: SHORTCUTS SETUP ── -->
+  <div class="tab-pane" id="tp-setup">
+
+    <div class="guide-card">
+      <div class="guide-head">📋 ショートカットの作り方（初回のみ・約10分）</div>
+      <div class="guide-body">
+        <div class="step">
+          <div class="sn sn-r">1</div>
+          <div class="step-body">
+            <div class="step-title">「ショートカット」アプリを開く</div>
+            <div class="step-desc">iPhone の「<em>ショートカット</em>」アプリ → 右上「＋」→ 名前：<em>ヘルス日次保存</em></div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="sn sn-r">2</div>
+          <div class="step-body">
+            <div class="step-title">HealthKit からデータを取得（3種類）</div>
+            <div class="step-desc">
+              アクション「<em>ヘルスケアのサンプルを検索</em>」を3つ追加：<br>
+              ▸ 体重 ／ 過去1日 ／ 最新のサンプル<br>
+              ▸ 収縮期血圧 ／ 過去1日 ／ 最新<br>
+              ▸ 拡張期血圧 ／ 過去1日 ／ 最新
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="sn sn-r">3</div>
+          <div class="step-body">
+            <div class="step-title">「辞書」アクションで JSON を組み立てる</div>
+            <div class="step-desc">アクション「<em>辞書</em>」を追加し、以下のキーを設定：</div>
+            <div class="shortcut-recipe">
+              <div class="sr-title">辞書キー設定</div>
+              <div class="sr-row"><div class="sr-num">d</div><div><div class="sr-action">date</div><div class="sr-detail">値：現在の日付（書式 YYYY-MM-DD）</div></div></div>
+              <div class="sr-row"><div class="sr-num">w</div><div><div class="sr-action">weight</div><div class="sr-detail">値：体重サンプルの「量」</div></div></div>
+              <div class="sr-row"><div class="sr-num">s</div><div><div class="sr-action">systolic</div><div class="sr-detail">値：収縮期サンプルの「量」</div></div></div>
+              <div class="sr-row"><div class="sr-num">d</div><div><div class="sr-action">diastolic</div><div class="sr-detail">値：拡張期サンプルの「量」</div></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="sn sn-r">4</div>
+          <div class="step-body">
+            <div class="step-title">iCloud Drive に保存</div>
+            <div class="step-desc">
+              「<em>テキスト</em>」アクション → 辞書を挿入（JSON化）<br>
+              「<em>ファイルを保存</em>」アクション：<br>
+              ▸ 保存先：<em>iCloud Drive</em> → フォルダ：<span class="ctag">HealthData</span><br>
+              ▸ ファイル名：現在の日付 + <span class="ctag">.json</span>（例：2026-03-14.json）<br>
+              ▸ 上書き：<em>オン</em>
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="sn sn-t">5</div>
+          <div class="step-body">
+            <div class="step-title">オートメーションで毎朝自動実行</div>
+            <div class="step-desc">
+              ショートカット下部「<em>オートメーション</em>」→「＋」→「個人のオートメーション」<br>
+              トリガー：<em>時刻</em> → 毎日 08:00<br>
+              アクション：「ショートカットを実行」→ <em>ヘルス日次保存</em><br>
+              「<em>実行前に確認：オフ</em>」→ 完全自動化
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="sn sn-t">6</div>
+          <div class="step-body">
+            <div class="step-title">このWebアプリに自動送信する方法（オプション）</div>
+            <div class="step-desc">
+              ファイル保存の後に「<em>URLを開く</em>」アクションを追加：<br>
+              URL：このページのURL + <span class="ctag">?data=</span> + 辞書のURLエンコード済テキスト<br>
+              → アプリが開いた瞬間にデータを自動受信・表示
+            </div>
+            <div class="shortcut-recipe" style="margin-top:10px;">
+              <div class="sr-title">URL スキーム例</div>
+              <div class="sr-row"><div class="sr-action" id="appUrlDisplay" style="word-break:break-all;color:rgba(255,255,255,.8);font-size:11px;">（このページのURL）?data=[エンコード済テキスト]</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── TAB: ICLOUD ── -->
+  <div class="tab-pane" id="tp-icloud">
+
+    <div class="connect-card">
+      <div class="connect-head">
+        <span>☁️ iCloud Drive フォルダ接続</span>
+        <span id="lastSyncLabel" style="font-size:10px;font-family:var(--mono);opacity:.6;"></span>
+      </div>
+      <div class="connect-body">
+
+        <div class="folder-display" id="folderDisplay">
+          <span>📁</span>
+          <span id="folderName">フォルダ未選択</span>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn btn-teal" id="pickBtn" onclick="pickFolder()">📁 iCloudフォルダを選択</button>
+          <button class="btn btn-green" id="syncBtn" onclick="syncNow()" disabled>🔄 今すぐ同期</button>
+          <button class="btn btn-ghost" id="unlinkBtn" onclick="unlinkFolder()" disabled style="font-size:11px;padding:10px 14px;">接続解除</button>
+        </div>
+
+        <div class="drop-area" id="dropArea">
+          <div class="drop-label">▸ または個別ファイルを手動ドロップ</div>
+          <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileIn').click()">
+            <p>📂 <em>ショートカットが生成した JSON</em> をドロップ</p>
+            <p style="margin-top:4px;font-size:11px;"><em>クリックして選択</em>（.json / .xml 複数可）</p>
+          </div>
+          <input type="file" id="fileIn" accept=".json,.xml" multiple>
+        </div>
+
+        <div class="prog" id="prog">
+          <div class="prog-row"><span id="progText">読み込み中...</span><span id="progPct">0%</span></div>
+          <div class="prog-track"><div class="prog-fill" id="progFill"></div></div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const DAYS = ['日','月','火','水','木','金','土'];
+let curYM = '', stored = {}, dirHandle = null;
+
+/* ── INIT ── */
+(function init() {
+  const now = new Date();
+  curYM = now.toISOString().slice(0, 7);
+  document.getElementById('monthPick').value = curYM;
+  document.getElementById('todayDate').textContent =
+    now.toLocaleDateString('ja-JP', { year:'numeric', month:'long', day:'numeric', weekday:'short' });
+  document.getElementById('appUrlDisplay').textContent =
+    location.href.split('?')[0] + '?data=[エンコード済テキスト]';
+
+  try { const s = localStorage.getItem('hs_ic_v1'); if (s) stored = JSON.parse(s); } catch(e) {}
+
+  // File System Access API check
+  if (!('showDirectoryPicker' in window)) {
+    document.getElementById('pickBtn').textContent = '⚠ 非対応ブラウザ';
+    document.getElementById('pickBtn').disabled = true;
+  }
+
+  // Restore folder name
+  const fn = localStorage.getItem('hs_ic_folder');
+  if (fn) setFolderUI(fn);
+
+  // Restore last sync
+  const ls = localStorage.getItem('hs_ic_sync');
+  if (ls) document.getElementById('lastSyncLabel').textContent = '最終同期：' + ls;
+
+  // URL param from Shortcuts
+  const p = new URLSearchParams(location.search);
+  const raw = p.get('data');
+  if (raw) {
+    try {
+      const obj = JSON.parse(decodeURIComponent(raw));
+      ingestShortcutObj(obj);
+      history.replaceState({}, '', location.pathname);
+      document.getElementById('recvBanner').style.display = 'flex';
+      setTimeout(() => document.getElementById('recvBanner').style.display = 'none', 4000);
+      setConn('Shortcuts 受信済', 'synced');
+      toast('✅ Shortcuts からデータを受信しました');
+    } catch(e) { toast('⚠ URLデータエラー: ' + e.message); }
+  }
+
+  renderMonth();
+})();
+
+/* ── SHORTCUTS URL RECEIVER ── */
+function ingestShortcutObj(obj) {
+  // Single-day object: { date, weight, systolic, diastolic, pulse? }
+  const date = (obj.date || '').split('T')[0].split(' ')[0];
+  if (!date || date.length < 10) return;
+  const ym = date.slice(0, 7);
+  if (!stored[ym]) stored[ym] = {};
+  if (Array.isArray(stored[ym])) { const m = {}; stored[ym].forEach(x => m[x.date] = x); stored[ym] = m; }
+  const row = stored[ym][date] || nr(date);
+  if (obj.weight   != null) row.weight   = r1(parseFloat(obj.weight));
+  if (obj.systolic != null) row.systolic = Math.round(parseFloat(obj.systolic));
+  if (obj.diastolic!= null) row.diastolic= Math.round(parseFloat(obj.diastolic));
+  if (obj.pulse    != null) row.pulse    = Math.round(parseFloat(obj.pulse));
+  stored[ym][date] = row;
+  flatStored(); save(); renderMonth();
+}
+
+/* ── FOLDER PICKER ── */
+async function pickFolder() {
+  if (!('showDirectoryPicker' in window)) { toast('⚠ このブラウザはFile System Access APIに非対応です'); return; }
+  try {
+    dirHandle = await window.showDirectoryPicker({ mode: 'read' });
+    localStorage.setItem('hs_ic_folder', dirHandle.name);
+    setFolderUI(dirHandle.name);
+    toast('✅ フォルダを接続：' + dirHandle.name);
+    await syncNow();
+  } catch(e) { if (e.name !== 'AbortError') toast('⚠ ' + e.message); }
+}
+
+async function syncNow() {
+  if (!dirHandle) { toast('⚠ 先にフォルダを選択してください'); return; }
+  showProg(10, 'フォルダをスキャン中...');
+  setConn('同期中...', 'connected');
+  try {
+    const files = [];
+    for await (const entry of dirHandle.values())
+      if (entry.kind === 'file' && (entry.name.endsWith('.json') || entry.name.endsWith('.xml')))
+        files.push(entry);
+    if (!files.length) { toast('⚠ JSONファイルが見つかりません'); hideProg(); return; }
+    showProg(20, files.length + '件のファイルを検出...');
+    let cnt = 0;
+    for (const entry of files) {
+      const file = await entry.getFile();
+      const text = await file.text();
+      file.name.endsWith('.xml') ? ingestXML(text, false) : ingestJSON(text, false);
+      cnt++;
+      showProg(20 + Math.round(cnt / files.length * 75), `解析中 ${cnt}/${files.length}`);
+    }
+    flatStored(); save();
+    showProg(100, '完了！');
+    setTimeout(() => { hideProg(); renderMonth(); }, 400);
+    const lbl = new Date().toLocaleTimeString('ja-JP', { hour:'2-digit', minute:'2-digit' });
+    localStorage.setItem('hs_ic_sync', lbl);
+    document.getElementById('lastSyncLabel').textContent = '最終同期：' + lbl;
+    setConn('同期完了 ✓', 'synced');
+    toast('✅ ' + files.length + 'ファイルを同期しました');
+  } catch(e) { toast('⚠ ' + e.message); hideProg(); }
+}
+
+function setFolderUI(name) {
+  const fd = document.getElementById('folderDisplay');
+  fd.classList.add('set');
+  document.getElementById('folderName').textContent = '📁 ' + name;
+  document.getElementById('syncBtn').disabled = false;
+  document.getElementById('unlinkBtn').disabled = false;
+  document.getElementById('dropArea').style.display = 'none';
+  setConn('フォルダ接続済', 'connected');
+  // Re-pick on sync if page reloaded (dirHandle lost)
+  document.getElementById('syncBtn').onclick = async () => {
+    if (!dirHandle) { toast('📁 フォルダを再選択してください'); await pickFolder(); } else await syncNow();
+  };
+}
+
+function unlinkFolder() {
+  dirHandle = null;
+  localStorage.removeItem('hs_ic_folder');
+  localStorage.removeItem('hs_ic_sync');
+  const fd = document.getElementById('folderDisplay');
+  fd.classList.remove('set');
+  document.getElementById('folderName').textContent = 'フォルダ未選択';
+  document.getElementById('syncBtn').disabled = true;
+  document.getElementById('syncBtn').onclick = syncNow;
+  document.getElementById('unlinkBtn').disabled = true;
+  document.getElementById('dropArea').style.display = 'block';
+  document.getElementById('lastSyncLabel').textContent = '';
+  setConn('待機中', '');
+  toast('接続を解除しました');
+}
+
+/* ── DROP FALLBACK ── */
+const dz = document.getElementById('dropZone');
+const fi = document.getElementById('fileIn');
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('over'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('over'));
+dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('over'); [...e.dataTransfer.files].forEach(rf); });
+fi.addEventListener('change', e => { [...e.target.files].forEach(rf); });
+function rf(f) {
+  const r = new FileReader();
+  r.onload = e => f.name.endsWith('.xml') ? ingestXML(e.target.result, true) : ingestJSON(e.target.result, true);
+  r.readAsText(f, 'UTF-8');
+}
+
+/* ── PARSERS ── */
+function ingestJSON(text, doR = true) {
+  let j; try { j = JSON.parse(text); } catch(e) { return; }
+  // Shortcuts single-day format: { date, weight, systolic, diastolic }
+  if (j.date && (j.weight != null || j.systolic != null)) {
+    ingestShortcutObj(j);
+    if (doR) toast('✅ 読み込み完了');
+    return;
+  }
+  // Health Auto Export format
+  const ms = j?.data?.metrics || j?.metrics || j;
+  if (!Array.isArray(ms)) return;
+  const bd = {};
+  for (const m of ms) {
+    const name = (m.name || '').toLowerCase();
+    for (const e of (m.data || [])) {
+      const date = (e.date || '').split(' ')[0].split('T')[0];
+      if (!date || date.length < 10) continue;
+      if (!bd[date]) bd[date] = nr(date);
+      const qty = parseFloat(e.qty ?? e.value ?? 0);
+      const unit = (m.units || '').toLowerCase();
+      if (name.includes('body_mass') || name.includes('weight') || name === 'body mass')
+        bd[date].weight = r1(unit.includes('lb') ? qty * 0.453592 : qty);
+      else if (name.includes('systolic'))  bd[date].systolic  = Math.round(qty);
+      else if (name.includes('diastolic')) bd[date].diastolic = Math.round(qty);
+      else if (name.includes('heart_rate') || name.includes('heart rate')) bd[date].pulse = Math.round(qty);
+    }
+  }
+  mergeIn(bd);
+  if (doR) { flatStored(); save(); renderMonth(); toast('✅ 読み込み完了'); }
+}
+
+function ingestXML(text, doR = true) {
+  const doc = new DOMParser().parseFromString(text, 'text/xml'), bd = {};
+  for (const r of doc.getElementsByTagName('Record')) {
+    const type = r.getAttribute('type') || '';
+    const date = (r.getAttribute('startDate') || '').split(' ')[0];
+    if (!date) continue;
+    if (!bd[date]) bd[date] = nr(date);
+    const v = parseFloat(r.getAttribute('value'));
+    const u = r.getAttribute('unit') || '';
+    if (type === 'HKQuantityTypeIdentifierBodyMass') bd[date].weight = r1(u === 'lb' ? v * 0.453592 : v);
+    else if (type === 'HKQuantityTypeIdentifierBloodPressureSystolic')  bd[date].systolic  = Math.round(v);
+    else if (type === 'HKQuantityTypeIdentifierBloodPressureDiastolic') bd[date].diastolic = Math.round(v);
+    else if (type === 'HKQuantityTypeIdentifierHeartRate') bd[date].pulse = Math.round(v);
+  }
+  mergeIn(bd);
+  if (doR) { flatStored(); save(); renderMonth(); toast('✅ XML読み込み完了'); }
+}
+
+function mergeIn(bd) {
+  Object.values(bd).forEach(d => {
+    const ym = d.date.slice(0, 7);
+    if (Array.isArray(stored[ym])) { const m = {}; stored[ym].forEach(x => m[x.date] = x); stored[ym] = m; }
+    if (!stored[ym]) stored[ym] = {};
+    stored[ym][d.date] = d;
+  });
+}
+function flatStored() {
+  Object.keys(stored).forEach(ym => {
+    if (!Array.isArray(stored[ym]))
+      stored[ym] = Object.values(stored[ym]).sort((a, b) => a.date.localeCompare(b.date));
+  });
+}
+
+/* ── RENDER ── */
+function renderMonth() {
+  const data = gmd(curYM);
+  const [y, m] = curYM.split('-').map(Number);
+  const days = new Date(y, m, 0).getDate();
+  const bd = {}; data.forEach(d => bd[d.date] = d);
+  const hasAny = Object.keys(stored).length > 0;
+  document.getElementById('emptyState').style.display = hasAny ? 'none' : 'block';
+  if (!hasAny) { document.getElementById('dataSec').classList.remove('on'); return; }
+
+  const ws = data.filter(d => d.weight   !== null).map(d => d.weight);
+  const ss = data.filter(d => d.systolic !== null).map(d => d.systolic);
+  const hs = data.filter(d => d.pulse    !== null).map(d => d.pulse);
+  const avg = a => a.length ? r1(a.reduce((x, v) => x + v, 0) / a.length) : '—';
+
+  document.getElementById('dataHeading').innerHTML = `${y}年<span>${m}月</span>（${data.length}日 / ${days}日）`;
+  document.getElementById('sDays').textContent = data.length;
+  document.getElementById('sW').textContent    = avg(ws);
+  document.getElementById('sBP').textContent   = avg(ss.map(Math.round));
+  document.getElementById('sHR').textContent   = Math.round(avg(hs)) || '—';
+
+  let html = '';
+  for (let day = 1; day <= days; day++) {
+    const ds  = `${y}-${String(m).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+    const dow = new Date(ds).getDay();
+    const d   = bd[ds];
+    const wk  = dow === 0 || dow === 6;
+    const dc  = dow === 0 ? 'sun' : dow === 6 ? 'sat' : 'wkd';
+    if (!d) {
+      html += `<tr class="${wk?'wknd':''} nd"><td class="dc">${ds}</td><td class="dw ${dc}">${DAYS[dow]}</td><td class="ve">—</td><td class="ve">—</td><td class="ve">—</td><td class="ve">—</td><td></td></tr>`;
+    } else {
+      const bp = bpEval(d.systolic, d.diastolic);
+      html += `<tr class="${wk?'wknd':''}">
+        <td class="dc">${ds}</td>
+        <td class="dw ${dc}">${DAYS[dow]}</td>
+        <td class="vw">${d.weight   !== null ? d.weight.toFixed(1) : '<span class="ve">—</span>'}</td>
+        <td class="vs">${d.systolic !== null ? d.systolic : '<span class="ve">—</span>'}</td>
+        <td class="vd">${d.diastolic!== null ? d.diastolic: '<span class="ve">—</span>'}</td>
+        <td class="vh">${d.pulse    !== null ? d.pulse    : '<span class="ve">—</span>'}</td>
+        <td>${bp ? `<span class="bpt ${bp.c}">${bp.l}</span>` : ''}</td>
+      </tr>`;
+    }
+  }
+  document.getElementById('tbody').innerHTML = html;
+  document.getElementById('dataSec').classList.add('on');
+}
+
+function gmd(ym) {
+  const r = stored[ym];
+  if (!r) return [];
+  return Array.isArray(r) ? r : Object.values(r).sort((a, b) => a.date.localeCompare(b.date));
+}
+
+/* ── CSV ── */
+function buildCSV() {
+  const [y, m] = curYM.split('-').map(Number);
+  const days = new Date(y, m, 0).getDate();
+  const bd = {}; gmd(curYM).forEach(d => bd[d.date] = d);
+  const rows = ['日付,曜日,体重(kg),収縮期血圧(mmHg),拡張期血圧(mmHg),心拍数(bpm)'];
+  for (let day = 1; day <= days; day++) {
+    const ds  = `${y}-${String(m).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+    const dow = DAYS[new Date(ds).getDay()];
+    const d   = bd[ds];
+    rows.push(d
+      ? [ds, dow, d.weight !== null ? d.weight.toFixed(1) : '', d.systolic || '', d.diastolic || '', d.pulse || ''].join(',')
+      : [ds, dow, '', '', '', ''].join(','));
+  }
+  return '\uFEFF' + rows.join('\n');
+}
+function dlCSV() {
+  const b = new Blob([buildCSV()], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(b);
+  a.download = `health_${curYM}.csv`;
+  a.click(); URL.revokeObjectURL(a.href);
+  toast('⬇ CSV ダウンロード開始');
+}
+function copyCSV() {
+  navigator.clipboard.writeText(buildCSV())
+    .then(() => toast('📋 クリップボードにコピー'))
+    .catch(() => { const t = document.createElement('textarea'); t.value = buildCSV(); document.body.appendChild(t); t.select(); document.execCommand('copy'); document.body.removeChild(t); toast('📋 コピーしました'); });
+}
+function clearMonth() {
+  if (!confirm(curYM + ' のデータを消去しますか？')) return;
+  delete stored[curYM]; save();
+  document.getElementById('dataSec').classList.remove('on');
+  toast('🗑 消去しました');
+}
+
+/* ── UTILS ── */
+function setOff(off, btn) {
+  const now = new Date(); now.setMonth(now.getMonth() + off);
+  curYM = now.toISOString().slice(0, 7);
+  document.getElementById('monthPick').value = curYM;
+  document.querySelectorAll('.mb-btn').forEach(b => b.classList.remove('on')); btn.classList.add('on');
+  renderMonth();
+}
+document.getElementById('monthPick').addEventListener('change', e => {
+  curYM = e.target.value;
+  document.querySelectorAll('.mb-btn').forEach(b => b.classList.remove('on'));
+  renderMonth();
+});
+function swTab(id, btn) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('on'));
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('on'));
+  btn.classList.add('on'); document.getElementById('tp-' + id).classList.add('on');
+}
+function setConn(txt, cls) {
+  const p = document.getElementById('connPill');
+  p.className = 'conn-pill' + (cls ? ' ' + cls : '');
+  document.getElementById('connText').textContent = txt;
+}
+function showProg(pct, text) {
+  document.getElementById('prog').classList.add('on');
+  document.getElementById('progFill').style.width = pct + '%';
+  document.getElementById('progText').textContent = text;
+  document.getElementById('progPct').textContent  = pct + '%';
+}
+function hideProg() { document.getElementById('prog').classList.remove('on'); }
+function nr(date)   { return { date, weight: null, systolic: null, diastolic: null, pulse: null }; }
+function r1(v)      { return Math.round(v * 10) / 10; }
+function save()     { try { localStorage.setItem('hs_ic_v1', JSON.stringify(stored)); } catch(e) {} }
+function bpEval(s, d) {
+  if (!s || !d) return null;
+  if (s < 120 && d < 80) return { l: '正常',   c: 'bpt-ok' };
+  if (s < 130 && d < 80) return { l: '正常高値', c: 'bpt-pre' };
+  if (s < 140 || d < 90) return { l: '高値',    c: 'bpt-pre' };
+  return { l: '高血圧', c: 'bpt-high' };
+}
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('on');
+  setTimeout(() => t.classList.remove('on'), 2800);
+}
+</script>
+</body>
+</html>
