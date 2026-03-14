@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>ヘルス日次レポート — Google Drive版</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
+:root{
+  --bg:#f8f9fe;--white:#fff;--s1:#f1f3f9;--s2:#e8ebf5;--border:#dde1f0;
+  --ink:#1a1d2e;--ink2:#3d4262;--dim:#8890b0;
+  --gb:#1a73e8;--gr:#ea4335;--gg:#34a853;--gy:#fbbc04;
+  --teal:#00897b;--shadow:0 1px 3px rgba(26,29,46,.08),0 4px 16px rgba(26,29,46,.06);
+  --mono:'JetBrains Mono',monospace;--sans:'Noto Sans JP',sans-serif;--r:12px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);min-height:100vh;}
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:var(--s1);}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+.wrap{max-width:860px;margin:0 auto;padding:0 20px 80px;}
+.g-bar{height:3px;background:linear-gradient(90deg,var(--gb) 0%,var(--gr) 25%,var(--gy) 50%,var(--gg) 75%,var(--gb) 100%);margin-bottom:24px;border-radius:2px;}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:20px 0 16px;border-bottom:1px solid var(--border);margin-bottom:28px;gap:12px;flex-wrap:wrap;}
+.brand{display:flex;align-items:center;gap:12px;}
+.brand-icon{width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,#ea4335,#fbbc04 50%,#34a853);display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 4px 12px rgba(234,67,53,.3);animation:hb 2.2s ease-in-out infinite;}
+@keyframes hb{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+.brand-text h1{font-size:18px;font-weight:900;letter-spacing:-.5px;}
+.brand-text p{font-size:11px;color:var(--dim);font-family:var(--mono);margin-top:2px;}
+.auth-area{display:flex;align-items:center;gap:10px;}
+.user-chip{display:flex;align-items:center;gap:8px;padding:6px 12px;background:var(--white);border:1px solid var(--border);border-radius:20px;font-size:12px;color:var(--ink2);}
+.ua{width:24px;height:24px;border-radius:50%;background:var(--gb);color:white;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;}
+.btn{display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700;font-family:var(--sans);transition:all .15s;white-space:nowrap;}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none!important;}
+.btn-google{background:var(--white);color:var(--ink2);border:1px solid var(--border);box-shadow:0 1px 3px rgba(0,0,0,.08);}
+.btn-google:hover:not(:disabled){box-shadow:var(--shadow);transform:translateY(-1px);}
+.btn-blue{background:var(--gb);color:white;}
+.btn-blue:hover:not(:disabled){background:#1557b0;transform:translateY(-1px);box-shadow:0 4px 12px rgba(26,115,232,.3);}
+.btn-teal{background:var(--teal);color:white;}
+.btn-teal:hover:not(:disabled){background:#00695c;transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,137,123,.3);}
+.btn-ghost{background:var(--s1);color:var(--ink2);border:1px solid var(--border);}
+.btn-ghost:hover:not(:disabled){background:var(--s2);}
+.btn-red{background:var(--gr);color:white;}
+.btn-red:hover:not(:disabled){background:#c62828;}
+.btn-sm{padding:6px 12px;font-size:12px;border-radius:6px;}
+.card{background:var(--white);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);margin-bottom:20px;overflow:hidden;}
+.card-head{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--s1);background:var(--s1);gap:10px;flex-wrap:wrap;}
+.card-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.8px;color:var(--dim);font-family:var(--mono);display:flex;align-items:center;gap:7px;}
+.card-body{padding:20px;}
+.guide-tabs{display:flex;border-bottom:1px solid var(--border);}
+.gtab{flex:1;padding:11px 8px;text-align:center;font-size:12px;font-weight:700;color:var(--dim);cursor:pointer;border:none;background:transparent;font-family:var(--sans);transition:all .15s;border-bottom:2px solid transparent;}
+.gtab.on{color:var(--gb);border-bottom-color:var(--gb);}
+.gpane{display:none;padding:20px;}
+.gpane.on{display:block;}
+.step-item{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--s1);}
+.step-item:last-child{border-bottom:none;}
+.sn{min-width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;font-family:var(--mono);flex-shrink:0;margin-top:1px;}
+.sn-b{background:rgba(26,115,232,.1);color:var(--gb);border:1px solid rgba(26,115,232,.2);}
+.sn-g{background:rgba(52,168,83,.1);color:var(--gg);border:1px solid rgba(52,168,83,.2);}
+.sn-t{background:rgba(0,137,123,.1);color:var(--teal);border:1px solid rgba(0,137,123,.2);}
+.step-body{flex:1;}
+.step-title{font-size:13px;font-weight:700;margin-bottom:3px;}
+.step-desc{font-size:12px;color:var(--dim);line-height:1.7;}
+.step-desc em{font-style:normal;color:var(--ink);font-weight:600;}
+.ctag{display:inline-block;padding:1px 7px;border-radius:4px;background:var(--s1);border:1px solid var(--border);font-size:11px;font-family:var(--mono);color:var(--gb);}
+.cid-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;}
+.cid-input{flex:1;min-width:200px;background:var(--white);border:1px solid var(--border);border-radius:8px;padding:9px 13px;font-size:12px;font-family:var(--mono);color:var(--ink);outline:none;transition:border-color .15s;}
+.cid-input:focus{border-color:var(--gb);box-shadow:0 0 0 3px rgba(26,115,232,.1);}
+.cid-input.set{border-color:var(--gg);color:var(--gg);}
+.ds-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:12px;font-size:11px;font-weight:700;font-family:var(--mono);background:var(--s2);color:var(--dim);border:1px solid var(--border);transition:all .3s;}
+.ds-badge.connected{background:rgba(52,168,83,.1);color:var(--gg);border-color:rgba(52,168,83,.25);}
+.ds-badge.syncing{background:rgba(26,115,232,.1);color:var(--gb);border-color:rgba(26,115,232,.25);}
+.ds-dot{width:5px;height:5px;border-radius:50%;background:currentColor;}
+.ds-badge.syncing .ds-dot{animation:blink 1s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.folder-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 14px;background:var(--s1);border-radius:8px;border:1px solid var(--border);margin-bottom:12px;}
+.folder-path{font-size:12px;font-family:var(--mono);color:var(--dim);flex:1;}
+.folder-path.set{color:var(--teal);}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;}
+.drop-fallback{margin-top:16px;padding-top:16px;border-top:1px dashed var(--border);}
+.drop-label{font-size:11px;color:var(--dim);font-family:var(--mono);margin-bottom:8px;}
+.drop-zone{border:2px dashed var(--border);border-radius:8px;padding:20px;text-align:center;cursor:pointer;transition:all .2s;background:var(--bg);}
+.drop-zone:hover,.drop-zone.over{border-color:var(--gb);background:rgba(26,115,232,.03);}
+.drop-zone p{font-size:13px;color:var(--dim);}
+.drop-zone em{font-style:normal;color:var(--ink);font-weight:700;}
+#fileIn{display:none;}
+.prog{display:none;margin-top:12px;}
+.prog.on{display:block;}
+.prog-head{display:flex;justify-content:space-between;font-size:11px;font-family:var(--mono);color:var(--dim);margin-bottom:6px;}
+.prog-track{height:4px;background:var(--s2);border-radius:2px;overflow:hidden;}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--gb),var(--teal));border-radius:2px;transition:width .3s;width:0%;}
+.month-bar{display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--white);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);margin-bottom:16px;flex-wrap:wrap;}
+.mb-label{font-size:11px;font-family:var(--mono);color:var(--dim);text-transform:uppercase;letter-spacing:1px;white-space:nowrap;}
+.mb-input{background:var(--s1);border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-size:13px;font-family:var(--mono);color:var(--ink);outline:none;transition:border-color .15s;}
+.mb-input:focus{border-color:var(--gb);}
+.mb-btns{display:flex;gap:6px;flex-wrap:wrap;}
+.mb-btn{padding:6px 12px;background:var(--s1);border:1px solid var(--border);border-radius:6px;font-size:11px;font-family:var(--mono);cursor:pointer;color:var(--dim);transition:all .15s;}
+.mb-btn:hover{background:var(--s2);color:var(--ink);}
+.mb-btn.on{background:var(--gb);color:white;border-color:var(--gb);}
+.data-section{display:none;}
+.data-section.on{display:block;}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;}
+.stat-card{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:14px 12px;text-align:center;box-shadow:var(--shadow);}
+.sl{font-size:10px;font-family:var(--mono);color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;}
+.sv{font-size:24px;font-weight:900;font-family:var(--mono);line-height:1;}
+.sv.r{color:var(--gr);}.sv.b{color:var(--gb);}.sv.g{color:var(--gg);}.sv.y{color:#f57c00;}
+.su{font-size:10px;color:var(--dim);font-family:var(--mono);margin-top:3px;}
+.tbl-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;margin-bottom:16px;}
+.tbl-scroll{overflow-x:auto;max-height:500px;overflow-y:auto;}
+table{width:100%;border-collapse:collapse;font-size:12px;}
+thead{position:sticky;top:0;z-index:2;}
+th{background:var(--ink);color:rgba(255,255,255,.85);padding:11px 14px;text-align:left;font-size:10px;font-family:var(--mono);font-weight:600;letter-spacing:1.5px;text-transform:uppercase;white-space:nowrap;}
+td{padding:10px 14px;border-bottom:1px solid var(--s1);font-family:var(--mono);font-size:12px;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:var(--s1);}
+tr.wknd td{background:rgba(26,115,232,.025);}
+tr.wknd:hover td{background:var(--s1);}
+tr.nd{opacity:.3;}
+.dc{color:var(--dim);font-size:11px;}
+.dw{font-size:11px;font-weight:700;}
+.dw.sun{color:var(--gr);}.dw.sat{color:var(--gb);}.dw.wkd{color:var(--dim);}
+.vw{color:var(--gr);font-weight:600;}.vs{color:var(--gb);font-weight:600;}
+.vd{color:var(--teal);font-weight:600;}.vh{color:#f57c00;font-weight:600;}
+.ve{color:var(--border);}
+.bpt{display:inline-block;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:.5px;border:1px solid currentColor;}
+.bpt-ok{color:var(--gg);background:rgba(52,168,83,.07);}
+.bpt-pre{color:#f57c00;background:rgba(245,124,0,.07);}
+.bpt-high{color:var(--gr);background:rgba(234,67,53,.07);}
+.act-row{display:flex;gap:8px;flex-wrap:wrap;padding:14px 16px;border-top:1px solid var(--s1);background:var(--s1);}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(14px);background:var(--ink);color:white;padding:11px 20px;border-radius:10px;font-size:12px;font-family:var(--mono);box-shadow:0 8px 24px rgba(0,0,0,.2);opacity:0;pointer-events:none;z-index:999;transition:all .25s;white-space:nowrap;}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0);}
+@media(max-width:600px){.stats-grid{grid-template-columns:repeat(2,1fr);}.mb-btns{display:none;}.gtab{font-size:11px;padding:9px 4px;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="g-bar"></div>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-icon">🫀</div>
+    <div class="brand-text">
+      <h1>ヘルス日次レポート</h1>
+      <p>Health Auto Export × Google Drive</p>
+    </div>
+  </div>
+  <div class="auth-area" id="authArea">
+    <button class="btn btn-google" id="loginBtn" onclick="signIn()">
+      <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+      Google でログイン
+    </button>
+    <div class="user-chip" id="userChip" style="display:none;">
+      <div class="ua" id="userAvatar">?</div>
+      <span id="userName">—</span>
+      <button class="btn btn-ghost btn-sm" onclick="signOut()" style="padding:3px 8px;font-size:11px;">ログアウト</button>
+    </div>
+  </div>
+</div>
+
+<!-- SETUP -->
+<div class="card" id="setupCard">
+  <div class="card-head"><div class="card-title"><span>📋</span> セットアップガイド</div></div>
+  <div class="guide-tabs">
+    <button class="gtab on" onclick="gTab('prep',this)">① GCPの準備</button>
+    <button class="gtab" onclick="gTab('app',this)">② アプリ設定</button>
+    <button class="gtab" onclick="gTab('use',this)">③ 毎日の使い方</button>
+  </div>
+  <div class="gpane on" id="gp-prep">
+    <div class="step-item"><div class="sn sn-b">1</div><div class="step-body"><div class="step-title">Google Cloud Console でプロジェクト作成</div><div class="step-desc"><em>console.cloud.google.com</em> → 新しいプロジェクト作成</div></div></div>
+    <div class="step-item"><div class="sn sn-b">2</div><div class="step-body"><div class="step-title">Google Drive API を有効化</div><div class="step-desc">「APIとサービス」→「ライブラリ」→ <em>Google Drive API</em> を有効化</div></div></div>
+    <div class="step-item"><div class="sn sn-b">3</div><div class="step-body"><div class="step-title">OAuth 2.0 クライアントIDを作成</div><div class="step-desc">「認証情報」→「OAuthクライアントID」<br>種類：<em>ウェブアプリケーション</em><br>承認済みJSオリジン：このHTMLを置いたURL（<em>http://localhost</em> やサーバーURL）</div></div></div>
+    <div class="step-item"><div class="sn sn-b">4</div><div class="step-body"><div class="step-title">クライアントIDを下に貼り付け</div><div class="step-desc">取得したクライアントIDを「クライアントID設定」欄に入力・保存</div></div></div>
+  </div>
+  <div class="gpane" id="gp-app">
+    <div class="step-item"><div class="sn sn-g">1</div><div class="step-body"><div class="step-title">Health Auto Export をインストール</div><div class="step-desc">App Storeで <em>「Health Auto Export - iOS」</em> を無料インストール</div></div></div>
+    <div class="step-item"><div class="sn sn-g">2</div><div class="step-body"><div class="step-title">データ・出力形式を設定</div><div class="step-desc">体重・収縮期血圧・拡張期血圧・心拍数 を有効化　出力形式：<span class="ctag">JSON</span></div></div></div>
+    <div class="step-item"><div class="sn sn-g">3</div><div class="step-body"><div class="step-title">出力先を Google Drive に設定</div><div class="step-desc">Export先：<em>Google Drive</em> → フォルダを指定（例：<span class="ctag">HealthData</span>）<br>自動エクスポート：<em>毎日</em> に設定</div></div></div>
+  </div>
+  <div class="gpane" id="gp-use">
+    <div class="step-item"><div class="sn sn-t">1</div><div class="step-body"><div class="step-title">Health Auto Export が毎日自動でJSONをGoogle Driveに書き出す</div><div class="step-desc">一度設定すれば<em>操作不要で毎日自動保存</em>されます</div></div></div>
+    <div class="step-item"><div class="sn sn-t">2</div><div class="step-body"><div class="step-title">このアプリを開いて「🔄 今すぐ同期」を押す</div><div class="step-desc">Google Driveから最新JSONを自動取得・解析します（<em>1タップ</em>）</div></div></div>
+    <div class="step-item"><div class="sn sn-t">3</div><div class="step-body"><div class="step-title">CSVダウンロード</div><div class="step-desc">月別に整理されたデータをCSVでダウンロード。データはブラウザに保存されます。</div></div></div>
+  </div>
+</div>
+
+<!-- CLIENT ID -->
+<div class="card" id="cidCard">
+  <div class="card-head">
+    <div class="card-title"><span>🔑</span> Google OAuth クライアントID</div>
+    <div id="cidStatus" style="font-size:11px;font-family:var(--mono);color:var(--dim);"></div>
+  </div>
+  <div class="card-body">
+    <div class="step-desc" style="margin-bottom:12px;">Google Cloud Console で取得したクライアントIDを入力してください。一度設定すると記憶されます。</div>
+    <div class="cid-row">
+      <input type="text" class="cid-input" id="cidInput" placeholder="xxxxxxxxxxxxxxx.apps.googleusercontent.com">
+      <button class="btn btn-blue btn-sm" onclick="saveClientId()">保存</button>
+      <a href="https://console.cloud.google.com/" target="_blank" class="btn btn-ghost btn-sm">GCPコンソール ↗</a>
+    </div>
+  </div>
+</div>
+
+<!-- DRIVE -->
+<div class="card">
+  <div class="card-head">
+    <div class="card-title"><span>☁️</span> Google Drive 接続</div>
+    <div class="ds-badge" id="dsBadge"><div class="ds-dot"></div><span id="dsText">未接続</span></div>
+  </div>
+  <div class="card-body">
+    <div class="folder-row">
+      <span style="font-size:18px;">📁</span>
+      <div class="folder-path" id="folderPath">フォルダ未選択</div>
+      <button class="btn btn-ghost btn-sm" id="changeFolderBtn" onclick="pickFolder()" style="display:none;">変更</button>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-google" id="pickFolderBtn" onclick="pickFolder()">
+        <svg width="14" height="14" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+        Driveフォルダを選択
+      </button>
+      <button class="btn btn-teal" id="syncBtn" onclick="doSync()" disabled>🔄 今すぐ同期</button>
+      <button class="btn btn-ghost btn-sm" id="disconnectBtn" onclick="disconnect()" style="display:none;">接続解除</button>
+    </div>
+    <div class="drop-fallback" id="dropFallback">
+      <div class="drop-label">▸ またはJSONファイルを手動ドロップ（フォールバック）</div>
+      <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileIn').click()">
+        <p>📂 <em>Health Auto Export の JSONファイル</em> をドロップ</p>
+        <p style="margin-top:5px;font-size:11px;">または <em>クリックして選択</em>（.json / .xml 複数可）</p>
+      </div>
+      <input type="file" id="fileIn" accept=".json,.xml" multiple>
+    </div>
+    <div class="prog" id="prog">
+      <div class="prog-head"><span id="progText">読み込み中...</span><span id="progPct">0%</span></div>
+      <div class="prog-track"><div class="prog-fill" id="progFill"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- MONTH -->
+<div class="month-bar">
+  <span class="mb-label">📅 表示月</span>
+  <input type="month" class="mb-input" id="monthPick">
+  <div class="mb-btns">
+    <button class="mb-btn on" onclick="setOff(0,this)">今月</button>
+    <button class="mb-btn" onclick="setOff(-1,this)">先月</button>
+    <button class="mb-btn" onclick="setOff(-2,this)">2ヶ月前</button>
+    <button class="mb-btn" onclick="setOff(-3,this)">3ヶ月前</button>
+  </div>
+</div>
+
+<!-- DATA -->
+<div class="data-section" id="dataSection">
+  <div class="stats-grid">
+    <div class="stat-card"><div class="sl">記録日数</div><div class="sv r" id="sDays">—</div><div class="su">日</div></div>
+    <div class="stat-card"><div class="sl">体重 平均</div><div class="sv b" id="sW">—</div><div class="su">kg</div></div>
+    <div class="stat-card"><div class="sl">収縮期 平均</div><div class="sv g" id="sBP">—</div><div class="su">mmHg</div></div>
+    <div class="stat-card"><div class="sl">心拍 平均</div><div class="sv y" id="sHR">—</div><div class="su">bpm</div></div>
+  </div>
+  <div class="tbl-card">
+    <div class="card-head">
+      <div class="card-title"><span>📊</span><span id="tblTitle">日別データ</span></div>
+      <div id="lastSync" style="font-size:11px;font-family:var(--mono);color:var(--dim);"></div>
+    </div>
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr><th>日付</th><th>曜</th><th>体重 kg</th><th>収縮期</th><th>拡張期</th><th>心拍</th><th>評価</th></tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <div class="act-row">
+      <button class="btn btn-blue" onclick="dlCSV()">⬇ CSVダウンロード</button>
+      <button class="btn btn-ghost" onclick="copyCsv()">📋 コピー</button>
+      <button class="btn btn-red btn-sm" onclick="clearMonth()">🗑 この月を消去</button>
+    </div>
+  </div>
+</div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script src="https://accounts.google.com/gsi/client" async></script>
+<script>
+const DAYS=['日','月','火','水','木','金','土'];
+const SCOPES='https://www.googleapis.com/auth/drive.readonly';
+const DAPI='https://www.googleapis.com/drive/v3';
+let curYM='',stored={},token=null,folderId=null,folderName=null,clientId='';
+
+(function init(){
+  const now=new Date();
+  curYM=now.toISOString().slice(0,7);
+  document.getElementById('monthPick').value=curYM;
+  try{const s=localStorage.getItem('hgd_v1');if(s)stored=JSON.parse(s);}catch(e){}
+  clientId=localStorage.getItem('hgd_cid')||'';
+  if(clientId){
+    document.getElementById('cidInput').value=clientId;
+    document.getElementById('cidInput').classList.add('set');
+    document.getElementById('cidStatus').textContent='✅ 設定済み';
+    document.getElementById('setupCard').style.display='none';
+    document.getElementById('cidCard').style.display='none';
+  }
+  const fn=localStorage.getItem('hgd_fn'),fi=localStorage.getItem('hgd_fi');
+  if(fn&&fi){folderName=fn;folderId=fi;setFolderUI(fn);}
+  const ls=localStorage.getItem('hgd_sync');
+  if(ls)document.getElementById('lastSync').textContent='最終同期：'+ls;
+  renderMonth();
+})();
+
+function saveClientId(){
+  const v=document.getElementById('cidInput').value.trim();
+  if(!v){toast('⚠ クライアントIDを入力してください');return;}
+  clientId=v;localStorage.setItem('hgd_cid',v);
+  document.getElementById('cidInput').classList.add('set');
+  document.getElementById('cidStatus').textContent='✅ 保存しました';
+  document.getElementById('setupCard').style.display='none';
+  document.getElementById('cidCard').style.display='none';
+  toast('✅ クライアントIDを保存しました');
+}
+
+function signIn(){
+  if(!clientId){toast('⚠ 先にクライアントIDを設定してください');document.getElementById('cidCard').scrollIntoView({behavior:'smooth'});return;}
+  const c=google.accounts.oauth2.initTokenClient({
+    client_id:clientId,scope:SCOPES,
+    callback:(r)=>{
+      if(r.error){toast('⚠ 認証エラー：'+r.error);return;}
+      token=r.access_token;
+      fetchUser();setBadge('ログイン済','connected');
+      if(folderId)document.getElementById('syncBtn').disabled=false;
+      toast('✅ Googleアカウントに接続しました');
+    }
+  });
+  c.requestAccessToken();
+}
+function signOut(){
+  if(token)google.accounts.oauth2.revoke(token);
+  token=null;
+  document.getElementById('userChip').style.display='none';
+  document.getElementById('loginBtn').style.display='';
+  document.getElementById('syncBtn').disabled=true;
+  setBadge('未接続','');toast('ログアウトしました');
+}
+async function fetchUser(){
+  try{
+    const r=await fetch('https://www.googleapis.com/oauth2/v3/userinfo',{headers:{Authorization:'Bearer '+token}});
+    const u=await r.json();
+    document.getElementById('loginBtn').style.display='none';
+    document.getElementById('userChip').style.display='flex';
+    document.getElementById('userName').textContent=u.name||u.email||'User';
+    document.getElementById('userAvatar').textContent=(u.name||'U')[0].toUpperCase();
+  }catch(e){}
+}
+
+async function pickFolder(){
+  if(!token){await doSignIn();if(!token)return;}
+  setBadge('フォルダ取得中...','syncing');
+  try{
+    const r=await dget(`/files?q=mimeType='application/vnd.google-apps.folder' and trashed=false&fields=files(id,name)&orderBy=name&pageSize=50`);
+    const folders=r.files||[];
+    if(!folders.length){toast('⚠ フォルダが見つかりません');setBadge('','');return;}
+    const m=document.createElement('div');
+    m.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;';
+    m.innerHTML=`<div style="background:white;border-radius:16px;width:100%;max-width:440px;box-shadow:0 20px 60px rgba(0,0,0,.3);overflow:hidden;font-family:'Noto Sans JP',sans-serif;">
+      <div style="padding:16px 20px;border-bottom:1px solid #e8ebf5;display:flex;align-items:center;justify-content:space-between;">
+        <div style="font-size:14px;font-weight:700;">📁 フォルダを選択</div>
+        <button onclick="this.closest('div[style]').remove()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#8890b0;line-height:1;">×</button>
+      </div>
+      <div style="max-height:320px;overflow-y:auto;padding:6px 0;">
+        ${folders.map(f=>`<div onclick="selFolder('${f.id}','${f.name.replace(/'/g,"\\'")}');this.closest('div[style]').remove()"
+          style="padding:12px 20px;cursor:pointer;display:flex;align-items:center;gap:10px;font-size:13px;"
+          onmouseover="this.style.background='#f1f3f9'" onmouseout="this.style.background=''">
+          <span style="font-size:18px;">📁</span><span>${f.name}</span></div>`).join('')}
+      </div>
+    </div>`;
+    document.body.appendChild(m);
+    setBadge('フォルダ選択中','connected');
+  }catch(e){toast('⚠ '+e.message);setBadge('','');}
+}
+
+function selFolder(id,name){
+  folderId=id;folderName=name;
+  localStorage.setItem('hgd_fi',id);localStorage.setItem('hgd_fn',name);
+  setFolderUI(name);
+  document.getElementById('syncBtn').disabled=false;
+  toast('📁 フォルダ選択：'+name);
+  doSync();
+}
+function setFolderUI(name){
+  document.getElementById('folderPath').textContent='📁 '+name;
+  document.getElementById('folderPath').classList.add('set');
+  document.getElementById('pickFolderBtn').style.display='none';
+  document.getElementById('changeFolderBtn').style.display='';
+  document.getElementById('disconnectBtn').style.display='';
+  document.getElementById('dropFallback').style.display='none';
+  setBadge('フォルダ接続済','connected');
+}
+function disconnect(){
+  folderId=null;folderName=null;
+  localStorage.removeItem('hgd_fi');localStorage.removeItem('hgd_fn');
+  document.getElementById('folderPath').textContent='フォルダ未選択';
+  document.getElementById('folderPath').classList.remove('set');
+  document.getElementById('pickFolderBtn').style.display='';
+  document.getElementById('changeFolderBtn').style.display='none';
+  document.getElementById('disconnectBtn').style.display='none';
+  document.getElementById('dropFallback').style.display='block';
+  document.getElementById('syncBtn').disabled=true;
+  setBadge('未接続','');toast('接続を解除しました');
+}
+
+async function doSignIn(){
+  return new Promise(res=>{
+    if(!clientId){toast('⚠ クライアントIDを設定してください');res();return;}
+    const c=google.accounts.oauth2.initTokenClient({
+      client_id:clientId,scope:SCOPES,
+      callback:(r)=>{if(!r.error){token=r.access_token;fetchUser();setBadge('ログイン済','connected');}res();}
+    });
+    c.requestAccessToken();
+  });
+}
+
+async function doSync(){
+  if(!token){await doSignIn();if(!token)return;}
+  if(!folderId){toast('⚠ Driveフォルダを選択してください');return;}
+  showProg(10,'Driveをスキャン中...');setBadge('同期中...','syncing');
+  try{
+    const r=await dget(`/files?q='${folderId}' in parents and mimeType='application/json' and trashed=false&fields=files(id,name)&orderBy=modifiedTime desc&pageSize=100`);
+    const files=r.files||[];
+    if(!files.length){toast('⚠ JSONファイルが見つかりません');hideProg();setBadge('ファイルなし','');return;}
+    showProg(20,`${files.length}件のJSONを検出...`);
+    let cnt=0;
+    for(const f of files){
+      const txt=await ddl(f.id);
+      ingestHAE(txt,false);
+      cnt++;showProg(20+Math.round(cnt/files.length*75),`解析中 ${cnt}/${files.length}`);
+    }
+    flat();save();showProg(100,'完了！');
+    setTimeout(()=>{hideProg();renderMonth();},400);
+    const lbl=new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'});
+    localStorage.setItem('hgd_sync',lbl);
+    document.getElementById('lastSync').textContent='最終同期：'+lbl;
+    setBadge('同期完了 ✓','connected');
+    toast(`✅ ${files.length}ファイルを同期しました`);
+  }catch(e){toast('⚠ 同期エラー：'+e.message);hideProg();setBadge('エラー','');}
+}
+
+async function dget(path){
+  const r=await fetch(DAPI+path,{headers:{Authorization:'Bearer '+token}});
+  if(!r.ok){const e=await r.json();throw new Error(e.error?.message||r.status);}
+  return r.json();
+}
+async function ddl(id){
+  const r=await fetch(`${DAPI}/files/${id}?alt=media`,{headers:{Authorization:'Bearer '+token}});
+  if(!r.ok)throw new Error('DL失敗');
+  return r.text();
+}
+
+// Drop fallback
+const dz=document.getElementById('dropZone'),fi=document.getElementById('fileIn');
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('over');});
+dz.addEventListener('dragleave',()=>dz.classList.remove('over'));
+dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('over');[...e.dataTransfer.files].forEach(rf);});
+fi.addEventListener('change',e=>{[...e.target.files].forEach(rf);});
+function rf(f){const r=new FileReader();r.onload=e=>{f.name.endsWith('.xml')?ingestXML(e.target.result):ingestHAE(e.target.result,true);};r.readAsText(f,'UTF-8');}
+
+function ingestHAE(text,doR=true){
+  let j;try{j=JSON.parse(text);}catch(e){return;}
+  const ms=j?.data?.metrics||j?.metrics||j;
+  if(!Array.isArray(ms))return;
+  const bd={};
+  for(const m of ms){
+    const name=(m.name||'').toLowerCase();
+    for(const e of(m.data||[])){
+      const date=(e.date||'').split(' ')[0].split('T')[0];
+      if(!date||date.length<10)continue;
+      if(!bd[date])bd[date]=nr(date);
+      const qty=parseFloat(e.qty??e.value??0);
+      const unit=(m.units||'').toLowerCase();
+      if(name.includes('body_mass')||name.includes('weight')||name==='body mass')bd[date].weight=r1(unit.includes('lb')?qty*0.453592:qty);
+      else if(name.includes('systolic'))bd[date].systolic=Math.round(qty);
+      else if(name.includes('diastolic'))bd[date].diastolic=Math.round(qty);
+      else if(name.includes('heart_rate')||name.includes('heart rate'))bd[date].pulse=Math.round(qty);
+    }
+  }
+  merge(bd);
+  if(doR){flat();save();renderMonth();toast('✅ 読み込み完了');}
+}
+function ingestXML(text){
+  const doc=new DOMParser().parseFromString(text,'text/xml'),bd={};
+  for(const r of doc.getElementsByTagName('Record')){
+    const type=r.getAttribute('type')||'',date=(r.getAttribute('startDate')||'').split(' ')[0];
+    if(!date)continue;
+    if(!bd[date])bd[date]=nr(date);
+    const v=parseFloat(r.getAttribute('value')),u=r.getAttribute('unit')||'';
+    if(type==='HKQuantityTypeIdentifierBodyMass')bd[date].weight=r1(u==='lb'?v*0.453592:v);
+    else if(type==='HKQuantityTypeIdentifierBloodPressureSystolic')bd[date].systolic=Math.round(v);
+    else if(type==='HKQuantityTypeIdentifierBloodPressureDiastolic')bd[date].diastolic=Math.round(v);
+    else if(type==='HKQuantityTypeIdentifierHeartRate')bd[date].pulse=Math.round(v);
+  }
+  merge(bd);flat();save();renderMonth();toast('✅ XML読み込み完了');
+}
+function merge(bd){
+  Object.values(bd).forEach(d=>{
+    const ym=d.date.slice(0,7);
+    if(Array.isArray(stored[ym])){const m={};stored[ym].forEach(x=>m[x.date]=x);stored[ym]=m;}
+    if(!stored[ym])stored[ym]={};
+    stored[ym][d.date]=d;
+  });
+}
+function flat(){Object.keys(stored).forEach(ym=>{if(!Array.isArray(stored[ym]))stored[ym]=Object.values(stored[ym]).sort((a,b)=>a.date.localeCompare(b.date));});}
+
+function renderMonth(){
+  const data=gmd(curYM);
+  const[y,m]=curYM.split('-').map(Number);
+  const days=new Date(y,m,0).getDate();
+  const bd={};data.forEach(d=>bd[d.date]=d);
+  if(!Object.keys(stored).length){document.getElementById('dataSection').classList.remove('on');return;}
+  const ws=data.filter(d=>d.weight!==null).map(d=>d.weight);
+  const ss=data.filter(d=>d.systolic!==null).map(d=>d.systolic);
+  const hs=data.filter(d=>d.pulse!==null).map(d=>d.pulse);
+  const avg=a=>a.length?r1(a.reduce((x,v)=>x+v,0)/a.length):'—';
+  document.getElementById('tblTitle').textContent=`${y}年${m}月（${data.length}日 / ${days}日）`;
+  document.getElementById('sDays').textContent=data.length;
+  document.getElementById('sW').textContent=avg(ws);
+  document.getElementById('sBP').textContent=avg(ss.map(Math.round));
+  document.getElementById('sHR').textContent=Math.round(avg(hs))||'—';
+  let html='';
+  for(let day=1;day<=days;day++){
+    const ds=`${y}-${String(m).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+    const dow=new Date(ds).getDay(),d=bd[ds],wknd=dow===0||dow===6;
+    const dc=dow===0?'sun':dow===6?'sat':'wkd';
+    if(!d){html+=`<tr class="${wknd?'wknd':''} nd"><td class="dc">${ds}</td><td class="dw ${dc}">${DAYS[dow]}</td><td class="ve">—</td><td class="ve">—</td><td class="ve">—</td><td class="ve">—</td><td></td></tr>`;}
+    else{const bp=bpEval(d.systolic,d.diastolic);html+=`<tr class="${wknd?'wknd':''}"><td class="dc">${ds}</td><td class="dw ${dc}">${DAYS[dow]}</td><td class="vw">${d.weight!==null?d.weight.toFixed(1):'<span class="ve">—</span>'}</td><td class="vs">${d.systolic!==null?d.systolic:'<span class="ve">—</span>'}</td><td class="vd">${d.diastolic!==null?d.diastolic:'<span class="ve">—</span>'}</td><td class="vh">${d.pulse!==null?d.pulse:'<span class="ve">—</span>'}</td><td>${bp?`<span class="bpt ${bp.c}">${bp.l}</span>`:''}</td></tr>`;}
+  }
+  document.getElementById('tbody').innerHTML=html;
+  document.getElementById('dataSection').classList.add('on');
+}
+function gmd(ym){const r=stored[ym];if(!r)return[];return Array.isArray(r)?r:Object.values(r).sort((a,b)=>a.date.localeCompare(b.date));}
+function buildCSV(){
+  const[y,m]=curYM.split('-').map(Number),days=new Date(y,m,0).getDate(),bd={};
+  gmd(curYM).forEach(d=>bd[d.date]=d);
+  const rows=['日付,曜日,体重(kg),収縮期血圧(mmHg),拡張期血圧(mmHg),心拍数(bpm)'];
+  for(let day=1;day<=days;day++){
+    const ds=`${y}-${String(m).padStart(2,'0')}-${String(day).padStart(2,'0')}`,dow=DAYS[new Date(ds).getDay()],d=bd[ds];
+    rows.push(d?[ds,dow,d.weight!==null?d.weight.toFixed(1):'',d.systolic||'',d.diastolic||'',d.pulse||''].join(','):[ds,dow,'','','',''].join(','));
+  }
+  return'\uFEFF'+rows.join('\n');
+}
+function dlCSV(){const b=new Blob([buildCSV()],{type:'text/csv;charset=utf-8;'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`health_${curYM}.csv`;a.click();URL.revokeObjectURL(a.href);toast('⬇ CSVダウンロード開始');}
+function copyCsv(){navigator.clipboard.writeText(buildCSV()).then(()=>toast('📋 コピーしました')).catch(()=>{const t=document.createElement('textarea');t.value=buildCSV();document.body.appendChild(t);t.select();document.execCommand('copy');document.body.removeChild(t);toast('📋 コピーしました');});}
+function clearMonth(){if(!confirm(`${curYM}のデータを消去しますか？`))return;delete stored[curYM];save();document.getElementById('dataSection').classList.remove('on');toast('🗑 消去しました');}
+function setOff(off,btn){const now=new Date();now.setMonth(now.getMonth()+off);curYM=now.toISOString().slice(0,7);document.getElementById('monthPick').value=curYM;document.querySelectorAll('.mb-btn').forEach(b=>b.classList.remove('on'));btn.classList.add('on');renderMonth();}
+document.getElementById('monthPick').addEventListener('change',e=>{curYM=e.target.value;document.querySelectorAll('.mb-btn').forEach(b=>b.classList.remove('on'));renderMonth();});
+function gTab(id,btn){document.querySelectorAll('.gtab').forEach(t=>t.classList.remove('on'));document.querySelectorAll('.gpane').forEach(p=>p.classList.remove('on'));btn.classList.add('on');document.getElementById('gp-'+id).classList.add('on');}
+function setBadge(text,cls){const b=document.getElementById('dsBadge');b.className='ds-badge'+(cls?' '+cls:'');document.getElementById('dsText').textContent=text;}
+function nr(date){return{date,weight:null,systolic:null,diastolic:null,pulse:null};}
+function r1(v){return Math.round(v*10)/10;}
+function save(){try{localStorage.setItem('hgd_v1',JSON.stringify(stored));}catch(e){}}
+function bpEval(s,d){if(!s||!d)return null;if(s<120&&d<80)return{l:'正常',c:'bpt-ok'};if(s<130&&d<80)return{l:'正常高値',c:'bpt-pre'};if(s<140||d<90)return{l:'高値',c:'bpt-pre'};return{l:'高血圧',c:'bpt-high'};}
+function showProg(pct,text){document.getElementById('prog').classList.add('on');document.getElementById('progFill').style.width=pct+'%';document.getElementById('progText').textContent=text;document.getElementById('progPct').textContent=pct+'%';}
+function hideProg(){document.getElementById('prog').classList.remove('on');}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('on');setTimeout(()=>t.classList.remove('on'),2800);}
+</script>
+</body>
+</html>
